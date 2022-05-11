@@ -26,37 +26,6 @@ test_frame = pd.read_csv(args.data_dir, sep="\t", header=0, error_bad_lines=Fals
 test_frame = test_frame.dropna()
 test_dataset = datasets.Dataset.from_pandas(test_frame)
 
-def kv2text_tokenize(element):
-    input_encodings = tokenizer(
-        element["input_str"],
-        truncation = True,
-        max_length=args.input_length
-    )
-    
-    target_encodings = tokenizer(
-        element["target"],
-        truncation = True,
-        max_length=args.out_length
-    )
-    
-    labels = target_encodings['input_ids']
-    
-    encodings = {
-        'input_ids': input_encodings['input_ids'],
-        'attention_mask': input_encodings['attention_mask'],
-        'labels': labels
-    }
-    
-    return encodings
-
-tokenized_datasets = test_dataset.map(
-    kv2text_tokenize, batched=True, remove_columns=test_dataset.column_names
-)
-
-print(tokenized_datasets)
-
-tokenized_datasets.set_format('torch')
-
 model = BartForConditionalGeneration.from_pretrained(tokenizer_pretrain_dir)
 model.to(device)
 
@@ -73,7 +42,7 @@ def inference(element, max_length=args.out_length, do_sample=False):
 
 result_dataset = test_dataset.map(inference, batched=True, batch_size=32)
 
-result_dataset[['item_id', 'input_str', 'target', 'bart_text']].to_csv(test_result_dir+f"generated_test.csv", sep='\t', index=False)
+result_dataset[['input_str', 'target', 'bart_text']].to_csv(test_result_dir+f"generated_test.csv", sep='\t', index=False)
     
 
     
